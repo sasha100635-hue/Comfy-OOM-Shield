@@ -17,7 +17,10 @@ AI-powered workflow analysis and optimization toolkit for ComfyUI.
 * Strict graph validation
 * Reduced AI hallucinations during workflow analysis
 * Real graph JSON context parsing
-
+- AI workflow assistant chat
+- Workflow-aware AI responses
+- Real graph JSON context for AI analysis
+- Workflow debugging assistance
 ---
 
 ## Utility Features
