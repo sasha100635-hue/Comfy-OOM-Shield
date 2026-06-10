@@ -4,6 +4,15 @@ AI-powered workflow analysis and optimization toolkit for ComfyUI.
 
 ---
 
+## About
+
+Comfy-OOM-Shield is a fully local and autonomous workflow analysis toolkit for ComfyUI.
+
+The system works independently without external AI APIs and analyzes real workflow graph data directly from workflow JSON structures.
+
+Designed for low-VRAM systems, workflow debugging, optimization, and advanced graph-aware AI assistance.
+
+
 ## Features
 
 * Execution graph analysis
