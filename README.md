@@ -1,203 +1,367 @@
-# Comfy-OOM-Shield v0.5
+# Comfy-OOM-Shield v0.7
 
-Comfy-OOM-Shield is a Windows desktop assistant for analyzing, fixing and safely optimizing ComfyUI workflow JSON files.
+**Check a ComfyUI workflow before it crashes your GPU.**
 
-It helps users understand workflow structure, VRAM/RAM pressure, GPU compatibility, heavy nodes, local models, reference media, video workflow type and safe optimization options before running heavy ComfyUI workflows.
+Comfy-OOM-Shield is a local Windows pre-run checker for ComfyUI workflow JSON files.
 
-v0.5 focuses on stability, safer workflow repair, safer Flux/Flux-style optimization, better subgraph handling, and improved local/API video workflow analysis.
+It helps you inspect downloaded or unfamiliar workflows before pressing **Queue**:
+
+* estimate VRAM, RAM, and SSD swap risk
+* identify heavy workflow patterns
+* report detected model and reference-media entries
+* flag possible custom node types
+* detect local video and API/cloud workflows
+* repair some broken workflow JSON files
+* safely optimize supported Flux / Flux1 / Flux2 workflows for lower-VRAM systems
+
+> Built mainly for Windows users with 6 GB–12 GB VRAM who regularly test workflows from Civitai, YouTube, Reddit, Discord, or workflow packs.
+
+---
+
+## Why use it?
+
+Downloaded a random ComfyUI workflow and do not know whether it will:
+
+* exceed your VRAM
+* spill into RAM or SSD swap
+* require unknown models or media
+* depend on custom nodes
+* use local video models or cloud/API nodes
+* fail because the JSON is damaged
+
+Comfy-OOM-Shield gives you a readable preflight report before you run it.
+
+
+Download workflow
+        ↓
+Analyze in Comfy-OOM-Shield
+        ↓
+Read Preflight Verdict
+        ↓
+Check risks, assets, and node hints
+        ↓
+Apply a safe fix when available
+        ↓
+Open the result in ComfyUI
+
 
 ---
 
 ## Main Features
 
-* Workflow Analyzer
-* Fix Workflow
-* Optimize For My GPU
-* AI Assistant / Chat
-* Save Report
-* Copy Report
-* VRAM / RAM / SSD swap estimation
-* GPU compatibility warnings
-* Local model detection
-* Reference media detection
-* Subgraph workflow analysis
-* Local video workflow detection
-* API/cloud video workflow detection
+### Preflight Verdict
+
+The report begins with a clear workflow verdict:
+
+* workflow type
+* VRAM risk
+* RAM / SSD swap risk
+* detected assets
+* safe optimization availability
+* main reason for the current risk level
+
+Example:
+
+
+PREFLIGHT VERDICT
+=================
+
+Status: HIGH RISK
+Main reason: This workflow may be too heavy for your GPU.
+Workflow type: Generation Workflow, Image Workflow
+VRAM risk: HIGH
+Safe optimizations available: YES
+
 
 ---
 
-## What Works in v0.5
+### Recommended Next Steps
 
-### Workflow Analyzer
+Comfy-OOM-Shield generates practical recommendations based on the detected workflow.
 
-Comfy-OOM-Shield can analyze ComfyUI workflow JSON files and report:
+Examples:
 
-* Workflow type
-* Node count
-* Workflow structure
-* Subgraphs
-* Heavy nodes
-* Local model loader nodes
-* Required local models
-* Reference images/videos
-* Local video workflows
+* try **Optimize For My GPU**
+* reduce video frame count manually
+* reduce video resolution manually
+* lower sampler steps manually
+* verify possible custom nodes in ComfyUI-Manager
+* close background GPU applications
+* use memory-efficient attention
+
+Recommendations are based on detected workflow information and do not silently modify unsupported settings.
+
+---
+
+### VRAM, RAM, and SSD Swap Estimation
+
+The analyzer estimates:
+
+* approximate workflow memory size
+* available VRAM
+* possible VRAM overflow
+* possible RAM spill
+* possible SSD swap usage
+* expected performance penalty
+* compatibility with common NVIDIA GPUs
+
+Memory estimates are approximate and should be treated as pre-run guidance, not exact runtime measurements.
+
+---
+
+### Workflow Type Detection
+
+Supported classification includes:
+
+* image workflows
+* generation workflows
+* local video workflows
 * API/cloud video workflows
-* VRAM/RAM/SSD swap risk
-* GPU compatibility
-* Practical optimization suggestions
+* Flux / Flux1 / Flux2 workflows
+* GGUF-related workflows
+* workflows containing subgraphs
+
+Local and API/cloud workflows are reported separately to avoid fake local VRAM warnings for cloud-based generation.
+
+---
+
+### Detected Assets
+
+The analyzer reports model and reference-media entries found inside the workflow.
+
+Examples:
+
+* checkpoints
+* diffusion models
+* UNET models
+* CLIP and text encoders
+* VAE files
+* LoRA files
+* input images
+* input videos
+* audio references
+
+Detected assets are not automatically confirmed to exist on the current computer.
+
+Only confirmed missing files should be described as missing.
+
+---
+
+### Custom Node Hints
+
+Comfy-OOM-Shield may flag node types that should be verified manually.
+
+
+MISSING CUSTOM NODES / INSTALL HINTS
+====================================
+
+- ExampleNode: possibly custom / verify manually.
+
+
+Custom Node Hints are informational only.
+
+Comfy-OOM-Shield does not:
+
+* install custom nodes automatically
+* clone Git repositories
+* download unknown node packages
+* modify the ComfyUI installation
+
+Use ComfyUI-Manager or the node developer’s documentation for manual installation.
 
 ---
 
 ### Fix Workflow
 
-Fix Workflow is now safer and more useful.
+The fixer can repair some common workflow JSON problems:
 
-It can:
+* trailing commas
+* garbage after valid JSON
+* supported structural problems
+* some invalid or incomplete fields
 
-* Repair some broken JSON workflow files
-* Remove trailing commas when safe
-* Remove garbage after a valid JSON document
-* Validate root workflow links
-* Validate subgraph links
-* Support ComfyUI subgraph link formats
-* Correctly handle ComfyUI subgraph input/output virtual nodes
-* Detect broken links
-* Report unsafe repair cases instead of guessing
-* Save a repaired workflow as a separate `_fixed.json` file
+It also reports:
 
-Fix Workflow does **not** randomly rewrite:
+* broken links
+* missing source or target nodes
+* dangling references
+* unrepaired problems
+* warnings that require manual review
 
-* Seeds
-* Prompts
-* Model filenames
-* CFG values
-* Unknown numeric values
-* Connected latent widget defaults
+The fixer does not guess how ambiguous graph connections should be rebuilt.
 
-If a workflow cannot be repaired safely, the tool will report the problem instead of guessing and breaking the workflow.
+Fixed files are saved separately with:
+
+
+_fixed.json
+
 
 ---
 
 ### Optimize For My GPU
 
-Optimize For My GPU currently supports safe optimization for confirmed Flux / Flux1 / Flux2 style workflows.
+The current safe optimizer supports confirmed Flux / Flux1 / Flux2 image-workflow patterns.
 
-It can safely reduce exposed workflow resolution values such as:
+Example safe change:
 
-```text
-1024x1024 -> 768x768
-```
 
-when the workflow structure is confirmed safe.
+1024 × 1024 → 768 × 768
 
-The optimizer avoids dangerous edits and does **not** mutate:
 
-* Seeds
-* Prompts
-* Model filenames
-* CFG values
-* Random numeric values
-* Unknown node settings
-* Connected internal latent defaults
+The optimizer preserves important workflow values:
 
-If no safe optimization path is found, the app will show:
+* seed
+* prompt
+* model filename
+* CFG
+* unrelated numeric values
+* connected latent settings that should remain unchanged
 
-```text
+Optimized files are saved separately with:
+
+
+_optimized.json
+
+
+If no confirmed safe change is found, the app reports:
+
+
 No safe optimizations applied.
-```
 
-This is expected for unsupported workflows, already optimized workflows, video workflows in v0.5, or workflows where changing values would be unsafe.
 
-The optimized workflow is saved as a separate `_optimized.json` file.
+This does not mean the workflow is broken.
 
----
-
-### AI Assistant / Chat
-
-The AI Assistant tab is available.
-
-It can help explain workflow analysis results and provide workflow-related guidance.
-
-Depending on your setup, AI Chat may use:
-
-* Local Ollama provider
-* OpenAI provider settings
-
-AI Chat is optional.
-
-Without AI Chat setup, the following features still work:
-
-* Workflow Analyzer
-* Fix Workflow
-* Optimize For My GPU
-* Save Report
-* Copy Report
-
----
-
-### Reports
-
-v0.5 includes:
-
-* Save Report
-* Copy Report
-
-Reports can be used for:
-
-* Debugging
-* Support requests
-* Sharing workflow problems
-* Comparing optimization results
-* Posting analysis logs when asking for help
+It means the optimizer did not find a change that could be applied safely.
 
 ---
 
 ## Video Workflow Support
 
-Video workflows are currently analyzed, not fully auto-optimized yet.
+Video workflows are analyzed, but they are **not automatically optimized yet**.
 
-v0.5 can detect and analyze:
+For local video workflows such as Wan, Comfy-OOM-Shield may recommend:
 
-* Local video workflows
-* Wan video workflows
-* API/cloud video workflows
-* Seedance-style API workflows
-* Reference media used by video workflows
-* Basic video width/height/length information when available
+* reducing frame count manually
+* reducing resolution manually
+* reducing sampler steps manually
+* closing background GPU applications
+* using memory-efficient attention
 
-Important:
+Wan and other video workflow settings are not mutated automatically.
 
-```text
-Video workflows are analyzed in v0.5.
-Full automatic video optimization is planned for future versions.
-```
-
-The optimizer does not yet automatically reduce Wan/Seedance video length, frame count, resolution or advanced video model settings.
+API/cloud video workflows are detected separately and are not treated as heavy local-model workflows.
 
 ---
 
-## Current Limitations
+## AI Assistant — Optional
 
-The following features are not fully implemented yet:
+Comfy-OOM-Shield includes an optional AI Assistant.
 
-* Full video workflow optimization
-* Advanced optimizer profiles
-* Automatic custom node installation
-* Full reconstruction of heavily corrupted workflows
-* Exact VRAM benchmarking
-* Deep optimizer support for every possible ComfyUI custom workflow
-* Advanced reroute/subgraph-boundary tracing
+Supported provider options may include:
 
-VRAM/RAM estimates are practical warning estimates, not exact benchmarks.
+* local Ollama / Qwen
+* OpenAI API
 
-Real memory usage may vary depending on:
+AI Chat is optional.
 
-* ComfyUI version
-* Custom nodes
-* Model precision
-* Driver version
-* Background applications
-* Workflow execution order
+Without AI Chat:
+
+* Workflow Analyzer still works
+* Fix Workflow still works
+* Optimize For My GPU still works
+* Save Report still works
+* Copy Report still works
+
+Recommended local model:
+
+
+qwen3:8b
+
+
+Included helper scripts may provide:
+
+
+install_ollama.bat
+install_qwen.bat
+start_ollama.bat
+test_qwen.bat
+
+
+---
+
+## Save and Share Reports
+
+The complete analysis can be:
+
+* copied to the clipboard
+* saved as a text report
+* shared when requesting help on GitHub, Discord, or other ComfyUI communities
+
+The saved report includes:
+
+* Preflight Verdict
+* Recommended Next Steps
+* detailed memory analysis
+* detected assets
+* custom node hints
+* GPU compatibility
+* optimization suggestions
+* developer analysis
+
+---
+
+## What’s New in v0.7
+
+* Added **Preflight Verdict**
+* Added **Recommended Next Steps**
+* Added report-only **Custom Node Hints**
+* Improved detected asset wording
+* Improved report structure and readability
+* Improved Flux optimization availability checks
+* Improved optimizer result messages
+* Improved separation of local video and API/cloud workflows
+* Added clear video-workflow limitations
+* Disabled automatic custom-node installation paths
+* Improved Save Report and Copy Report consistency
+* Removed unnecessary analyzer debug output
+* Added additional regression and safety tests
+
+Current verification:
+
+
+Compilation: passed
+Unit tests: 39 passed
+Manual GUI smoke test: passed
+
+
+---
+
+## Installation
+
+1. Download the latest Windows ZIP from GitHub Releases.
+2. Extract the complete archive.
+3. Open the extracted folder.
+4. Run:
+
+
+Comfy-OOM-Shield.exe
+
+
+Do not run the executable directly from inside the ZIP archive.
+
+The standalone release does not need to be installed inside the ComfyUI folder.
+
+---
+
+## Basic Usage
+
+1. Launch `Comfy-OOM-Shield.exe`.
+2. Drag and drop a ComfyUI workflow `.json` file.
+3. Read the Preflight Verdict.
+4. Review memory risk, detected assets, and node hints.
+5. Use **Fix Workflow** when JSON repair is needed.
+6. Use **Optimize For My GPU** when a safe optimization is available.
+7. Open the resulting JSON in ComfyUI.
 
 ---
 
@@ -205,347 +369,86 @@ Real memory usage may vary depending on:
 
 Recommended:
 
-* Windows 10 / 11
-* NVIDIA GPU recommended
-* 8GB+ RAM
-* 8GB+ VRAM recommended for heavier local workflows
-* Internet connection only required for online AI/provider features
+* Windows 10 or Windows 11, 64-bit
+* 8 GB RAM minimum
+* 16 GB RAM or more recommended
+* NVIDIA GPU recommended for local ComfyUI generation
+* Internet connection only for downloads, OpenAI, or optional AI setup
 
-The app can still analyze workflows without an internet connection.
-
----
-
-## Installation
-
-### 1. Download the Release ZIP
-
-Download:
-
-```text
-Comfy-OOM-Shield-v0.5-Windows.zip
-```
+The analyzer itself does not require a high-end GPU.
 
 ---
 
-### 2. Extract the ZIP
+## Current Limitations
 
-Extract the full folder anywhere you want.
-
-Example:
-
-```text
-Desktop\Comfy-OOM-Shield-v0.5-Windows
-```
-
-Important:
-
-Do **not** move only the `.exe` file out of the extracted folder.
-
-The app needs the full release folder to run correctly.
+* VRAM, RAM, and SSD swap estimates are approximate.
+* The app cannot guarantee that a workflow will run successfully.
+* Full automatic video optimization is not implemented.
+* Automatic custom-node installation is not implemented.
+* Detected model and media references are not automatically confirmed to exist.
+* Full reconstruction of heavily corrupted JSON is not implemented.
+* Some normal nodes may still appear under Custom Node Hints.
+* Some failures may come from ComfyUI updates, drivers, Python packages, custom-node regressions, or model incompatibility rather than the workflow JSON.
 
 ---
 
-## Running Comfy-OOM-Shield
+## Who Is This For?
 
-Open the extracted folder and run:
+Comfy-OOM-Shield is mainly built for:
 
-```text
-Comfy-OOM-Shield.exe
-```
-
-If Windows SmartScreen appears, choose:
-
-```text
-More info -> Run anyway
-```
-
-This can happen because the app is not code-signed yet.
+* Windows ComfyUI users
+* 6 GB, 8 GB, 10 GB, and 12 GB VRAM systems
+* users downloading random workflows
+* Flux / Flux1 / Flux2 users
+* Wan and local-video users
+* beginners and intermediate ComfyUI users
+* anyone tired of OOM crashes, broken JSON, and unclear workflow dependencies
 
 ---
 
-## Basic Usage
+## Project Status
 
-### Analyze Workflow
+Comfy-OOM-Shield is under active development.
 
-1. Open Comfy-OOM-Shield
-2. Load or drag-and-drop a ComfyUI workflow `.json`
-3. Click Analyze
-4. Read the workflow report
+Current stable release:
 
----
 
-### Fix Workflow
+v0.7
 
-1. Load a workflow `.json`
-2. Click Fix Workflow
-3. The app will save a new file:
 
-```text
-your_workflow_fixed.json
-```
+Planned future work may include:
 
-Fix Workflow is designed to be safe. It reports unsafe problems instead of guessing and breaking the workflow.
+* safer optimizer profiles
+* improved model and node databases
+* improved VRAM estimation
+* broader workflow compatibility
+* expanded video workflow support
+* improved repair validation and rollback
+
+Features will be added gradually, with safety preferred over aggressive workflow mutation.
 
 ---
 
-### Optimize For My GPU
-
-1. Load a supported workflow
-2. Click Optimize For My GPU
-3. The app will save a new file:
-
-```text
-your_workflow_optimized.json
-```
-
-If the workflow has no confirmed safe optimization path, the app will show:
-
-```text
-No safe optimizations applied.
-```
-
-This is expected behavior for unsupported workflows or video workflows that are currently analysis-only.
-
----
-
-### Save / Copy Report
-
-After analysis, you can:
-
-* Save Report
-* Copy Report
-
-Use this for bug reports, support, sharing workflow diagnostics, or comparing workflow changes.
-
----
-
-## AI Chat Setup Optional
-
-AI Chat is optional.
-
-Without AI Chat setup:
-
-* Workflow Analyzer works
-* Fix Workflow works
-* Optimize For My GPU works
-* Save Report works
-* Copy Report works
-
-Only AI Chat/provider features may be unavailable.
-
----
-
-### Local AI Chat with Ollama
-
-Comfy-OOM-Shield includes optional helper `.bat` files for local AI Chat setup.
-
-Inside the release folder you may find:
-
-```text
-install_ollama.bat
-install_qwen.bat
-```
-
-These files are optional.
-
-They are only needed if you want to use local AI Chat with Ollama + Qwen.
-
-Without Ollama/Qwen setup, the main features still work:
-
-* Workflow Analyzer
-* Fix Workflow
-* Optimize For My GPU
-* Save Report
-* Copy Report
-
-Only local AI Chat may be unavailable.
-
----
-
-#### Step 1 - Install Ollama
-
-Run:
-
-```text
-install_ollama.bat
-```
-
-This opens the Ollama download page.
-
-Install Ollama normally.
-
-After installing Ollama:
-
-* Close all CMD windows
-* Reopen CMD if needed
-
----
-
-#### Step 2 - Install Qwen Model
-
-Run:
-
-```text
-install_qwen.bat
-```
-
-This downloads and installs the local Qwen model used for AI Chat.
-
-The download may take several minutes depending on your internet speed.
-
----
-
-#### Step 3 - Start AI Chat
-
-1. Launch Comfy-OOM-Shield
-2. Open the Chat tab
-3. Select the local/Ollama provider if available
-4. Send a message
-
-If AI Chat does not respond, check that Ollama is running:
-
-```text
-http://localhost:11434
-```
-
----
-
-### OpenAI Provider
-
-OpenAI provider support is available through the app settings.
-
-You may need to provide your own OpenAI API key.
-
-Important:
-
-* Your API key is your responsibility
-* Do not share your config file publicly
-* OpenAI usage may require paid API credits
-* If OpenAI fails, Analyzer/Fix/Optimizer can still work without it
-
----
-
-## Common Problems
-
-### The app does not start
-
-Make sure you are running the `.exe` from inside the extracted release folder.
-
-Do not move the `.exe` alone.
-
----
-
-### Windows blocks the app
-
-Windows SmartScreen may appear because the app is not code-signed yet.
-
-Use:
-
-```text
-More info -> Run anyway
-```
-
----
-
-### AI Chat does not respond
-
-If using Ollama, check:
-
-```text
-http://localhost:11434
-```
-
-Ollama may not be running.
-
-Try restarting Ollama and launching the app again.
-
----
-
-### "ollama is not recognized"
-
-Ollama is not installed or not available in PATH.
-
-Fix:
-
-1. Install Ollama
-2. Restart CMD
-3. Try again
-
----
-
-### GPU shows as Unknown GPU
-
-Some GPUs may not be detected correctly.
-
-This does not stop workflow analysis.
-
----
-
-### No safe optimizations applied
-
-This is not always an error.
-
-It means the optimizer did not find a confirmed safe mutation path.
-
-This is expected for:
-
-* Unsupported workflows
-* Many custom workflows
-* Video workflows in v0.5
-* Workflows already optimized
-* Workflows where changing values would be unsafe
-
----
-
-## Recommended Use
-
-Use Comfy-OOM-Shield v0.5 to:
-
-* Check if a ComfyUI workflow is too heavy for your GPU
-* Detect local models
-* Detect reference media
-* Detect local/API video workflows
-* Estimate VRAM/RAM/SSD swap risk
-* Safely repair simple broken JSON workflow files
-* Safely optimize supported Flux/Flux-style workflows
-* Save or copy workflow reports
-
----
-
-## Not Recommended Yet
-
-Do not expect v0.5 to:
-
-* Automatically optimize every video workflow
-* Fully repair heavily corrupted workflows
-* Install every missing custom node automatically
-* Guarantee exact VRAM usage
-* Replace manual ComfyUI debugging completely
-
----
-
-## Typical Release Folder
-
-```text
-Comfy-OOM-Shield-v0.5-Windows/
-│
-├── Comfy-OOM-Shield.exe
-├── install_ollama.bat
-├── install_qwen.bat
-├── tools/
-├── agents/
-├── memory/
-└── automation/
-```
-
-Some files may vary depending on the release build.
+## Support and Feedback
+
+Useful feedback includes:
+
+* broken workflow JSON files
+* low-VRAM Flux workflows
+* Wan and other video workflows
+* incorrect workflow classification
+* false custom-node warnings
+* inaccurate memory estimates
+* optimizer no-op cases
+
+Please include the saved report when opening an issue.
 
 ---
 
 ## Disclaimer
 
-This software is provided as-is for educational and workflow assistance purposes.
+Comfy-OOM-Shield is provided as-is.
 
-Always keep backups of important workflows before editing or optimizing them.
+Always keep backups of important workflows.
 
-Comfy-OOM-Shield saves fixed and optimized files as separate JSON files, but manual backups are still recommended.
+The application is designed to provide pre-run analysis, supported repairs, safe optimization, and practical recommendations. It is not a replacement for testing the final workflow inside ComfyUI.
